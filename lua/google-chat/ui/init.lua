@@ -1,4 +1,5 @@
 local api = require("google-chat.api")
+local people_api = require("google-chat.api.people")
 local config = require("google-chat.config")
 
 local M = {}
@@ -212,36 +213,32 @@ function M.open_space(space_id)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Loading messages..." })
   vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
 
-  -- First, fetch members to cache display names
+  -- First, fetch members to get user IDs
   api.list_members(space_id, function(member_data, member_err)
     if not member_err and member_data and member_data.memberships then
-      -- Debug: write full member data to temp file
-      local debug_file = io.open("/tmp/gchat_debug.json", "w")
-      if debug_file then
-        debug_file:write(vim.fn.json_encode(member_data))
-        debug_file:close()
-        vim.notify("Debug data written to /tmp/gchat_debug.json", vim.log.levels.INFO)
-      end
-      
-      -- Cache member display names
+      -- Extract user IDs (excluding bots)
+      local user_ids = {}
       for _, membership in ipairs(member_data.memberships) do
-        if membership.member then
-          local user_id = membership.member.name
-          local display_name = membership.member.displayName
-          
-          if user_id and display_name then
-            M.user_cache[user_id] = display_name
-          end
+        if membership.member and membership.member.type == "HUMAN" then
+          table.insert(user_ids, membership.member.name)
         end
       end
       
-      vim.notify(string.format("Cached %d user display names", vim.tbl_count(M.user_cache)), vim.log.levels.INFO)
-    else
-      vim.notify("Failed to fetch members", vim.log.levels.WARN)
-    end
-    
-    -- Now fetch messages
-    api.list_messages(space_id, function(data, err)
+      -- Fetch display names from People API
+      if #user_ids > 0 then
+        people_api.batch_get_users(user_ids, function(user_map, people_err)
+          if not people_err and user_map then
+            -- Cache the display names
+            for user_id, display_name in pairs(user_map) do
+              M.user_cache[user_id] = display_name
+            end
+            vim.notify(string.format("Cached %d user display names", vim.tbl_count(M.user_cache)), vim.log.levels.INFO)
+          else
+            vim.notify("Could not fetch user display names: " .. (people_err or "unknown error"), vim.log.levels.WARN)
+          end
+          
+          -- Now fetch messages (regardless of People API success)
+          api.list_messages(space_id, function(data, err)
     if err then
       vim.notify("Failed to load messages: " .. err, vim.log.levels.ERROR)
       return
@@ -293,7 +290,10 @@ function M.open_space(space_id)
     vim.keymap.set("n", "r", function()
       M.open_space(space_id)
     end, opts)
-  end) -- End of list_messages callback
+          end) -- End of list_messages callback
+        end) -- End of batch_get_users callback
+      end -- End of if #user_ids > 0
+    end -- End of if not member_err
   end) -- End of list_members callback
 end
 
