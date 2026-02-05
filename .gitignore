@@ -1,0 +1,13 @@
+# Token files (security)
+*tokens.json
+*.token
+
+# Logs
+*.log
+
+# Neovim
+.DS_Store
+
+# Test data
+test/
+.test/

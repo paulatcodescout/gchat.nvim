@@ -1,0 +1,177 @@
+*google-chat.txt*  Google Chat integration for Neovim
+
+==============================================================================
+CONTENTS                                              *google-chat-contents*
+
+    1. Introduction ........................... |google-chat-introduction|
+    2. Requirements ........................... |google-chat-requirements|
+    3. Installation ........................... |google-chat-installation|
+    4. Configuration .......................... |google-chat-configuration|
+    5. Commands ............................... |google-chat-commands|
+    6. Functions .............................. |google-chat-functions|
+    7. Telescope .............................. |google-chat-telescope|
+
+==============================================================================
+1. INTRODUCTION                                   *google-chat-introduction*
+
+gchat.nvim is a Neovim plugin that provides Google Chat integration,
+allowing you to read and send messages directly from your editor.
+
+Features:
+  • OAuth2 authentication with Google
+  • List and browse Google Chat spaces
+  • View messages in spaces
+  • Send messages
+  • Telescope integration for fuzzy finding
+  • Secure token storage
+
+==============================================================================
+2. REQUIREMENTS                                   *google-chat-requirements*
+
+  • Neovim >= 0.8.0
+  • plenary.nvim (required)
+  • telescope.nvim (optional, for enhanced UI)
+
+==============================================================================
+3. INSTALLATION                                   *google-chat-installation*
+
+Using lazy.nvim: >lua
+    {
+      "paul/gchat.nvim",
+      dependencies = {
+        "nvim-lua/plenary.nvim",
+        "nvim-telescope/telescope.nvim",
+      },
+      config = function()
+        require("google-chat").setup({
+          auth = {
+            client_id = "YOUR_CLIENT_ID",
+            client_secret = "YOUR_CLIENT_SECRET",
+          },
+        })
+      end,
+    }
+<
+
+==============================================================================
+4. CONFIGURATION                                 *google-chat-configuration*
+
+Configure the plugin using the setup function: >lua
+    require("google-chat").setup({
+      auth = {
+        client_id = "YOUR_CLIENT_ID",
+        client_secret = "YOUR_CLIENT_SECRET",
+        redirect_uri = "http://localhost:8080",
+      },
+      ui = {
+        split = "vertical",
+        width = 80,
+      },
+      integrations = {
+        telescope = {
+          enabled = true,
+        },
+      },
+    })
+<
+
+Options:
+  • auth.client_id            OAuth2 client ID (required)
+  • auth.client_secret        OAuth2 client secret (required)
+  • auth.redirect_uri         OAuth2 redirect URI
+  • auth.token_file           Path to store tokens
+  • ui.split                  Window split type ("vertical"/"horizontal")
+  • ui.width                  Window width
+  • ui.date_format            Date format string
+  • integrations.telescope    Telescope integration settings
+  • logging.enabled           Enable debug logging
+  • logging.level             Log level ("debug"/"info"/"warn"/"error")
+
+==============================================================================
+5. COMMANDS                                           *google-chat-commands*
+
+*:GoogleChatAuth*
+    Start the OAuth2 authentication flow.
+
+*:GoogleChatStatus*
+    Check authentication status.
+
+*:GoogleChatLogout*
+    Logout and clear stored tokens.
+
+*:GoogleChatSpaces*
+    Show a list of all Google Chat spaces.
+
+*:GoogleChatOpen* {space_id}
+    Open a specific space and show messages.
+
+*:GoogleChatTelescopeSpaces*
+    Open Telescope picker for spaces.
+
+*:GoogleChatTelescopeSearch*
+    Open Telescope picker for searching spaces.
+
+*:GoogleChatTelescopeMessages* {space_id}
+    Open Telescope picker for messages in a space.
+
+Shorter aliases:
+  • :GCAuth         → :GoogleChatAuth
+  • :GCSpaces       → :GoogleChatSpaces
+  • :GCStatus       → :GoogleChatStatus
+  • :GCTelescope    → :GoogleChatTelescopeSpaces
+
+==============================================================================
+6. FUNCTIONS                                         *google-chat-functions*
+
+google_chat.setup({opts})                           *google_chat.setup()*
+    Setup the plugin with configuration options.
+
+google_chat.authenticate()                    *google_chat.authenticate()*
+    Start OAuth2 authentication flow.
+
+google_chat.logout()                                *google_chat.logout()*
+    Logout and clear tokens.
+
+google_chat.status()                                *google_chat.status()*
+    Show authentication status.
+
+google_chat.show_spaces()                      *google_chat.show_spaces()*
+    Display spaces list in a buffer.
+
+google_chat.open_space({space_id})            *google_chat.open_space()*
+    Open a specific space and show messages.
+
+google_chat.send_message({space_id}, {text}) *google_chat.send_message()*
+    Send a message to a space.
+
+google_chat.telescope_spaces()            *google_chat.telescope_spaces()*
+    Open Telescope picker for spaces.
+
+google_chat.telescope_messages({space_id})
+                                        *google_chat.telescope_messages()*
+    Open Telescope picker for messages in a space.
+
+google_chat.telescope_search()            *google_chat.telescope_search()*
+    Open Telescope picker for searching spaces.
+
+==============================================================================
+7. TELESCOPE                                         *google-chat-telescope*
+
+Telescope commands:
+
+:Telescope google_chat spaces
+    Browse spaces with fuzzy finding.
+
+:Telescope google_chat search_spaces
+    Search spaces dynamically.
+
+:Telescope google_chat messages space_id={id}
+    View messages in a space.
+
+Mappings in Telescope pickers:
+  • <CR>      Open selected item
+  • <C-v>     Open in vertical split
+  • <C-x>     Open in horizontal split
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

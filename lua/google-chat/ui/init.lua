@@ -1,0 +1,243 @@
+local api = require("google-chat.api")
+local config = require("google-chat.config")
+
+local M = {}
+
+-- State management
+M.state = {
+  spaces = {},
+  current_space = nil,
+  current_messages = {},
+  buffers = {},
+}
+
+-- Create or get buffer for spaces list
+function M.get_spaces_buffer()
+  if M.state.buffers.spaces and vim.api.nvim_buf_is_valid(M.state.buffers.spaces) then
+    return M.state.buffers.spaces
+  end
+
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_name(bufnr, "google-chat://spaces")
+  vim.api.nvim_buf_set_option(bufnr, "buftype", "nofile")
+  vim.api.nvim_buf_set_option(bufnr, "bufhidden", "hide")
+  vim.api.nvim_buf_set_option(bufnr, "swapfile", false)
+  vim.api.nvim_buf_set_option(bufnr, "filetype", "google-chat-spaces")
+
+  M.state.buffers.spaces = bufnr
+  return bufnr
+end
+
+-- Create or get buffer for messages
+function M.get_messages_buffer(space_id)
+  local buf_key = "messages_" .. space_id
+  
+  if M.state.buffers[buf_key] and vim.api.nvim_buf_is_valid(M.state.buffers[buf_key]) then
+    return M.state.buffers[buf_key]
+  end
+
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_name(bufnr, "google-chat://messages/" .. space_id)
+  vim.api.nvim_buf_set_option(bufnr, "buftype", "nofile")
+  vim.api.nvim_buf_set_option(bufnr, "bufhidden", "hide")
+  vim.api.nvim_buf_set_option(bufnr, "swapfile", false)
+  vim.api.nvim_buf_set_option(bufnr, "filetype", "google-chat-messages")
+
+  M.state.buffers[buf_key] = bufnr
+  return bufnr
+end
+
+-- Format space for display
+local function format_space(space)
+  local display_name = space.displayName or space.name or "Unknown"
+  local space_type = space.spaceType or "SPACE"
+  
+  return string.format("[%s] %s", space_type, display_name)
+end
+
+-- Format message for display
+local function format_message(message)
+  local sender = message.sender and message.sender.displayName or "Unknown"
+  local text = message.text or ""
+  local create_time = message.createTime or ""
+  
+  -- Extract timestamp
+  local timestamp = create_time:match("(%d%d%d%d%-%d%d%-%d%dT%d%d:%d%d)")
+  if timestamp then
+    timestamp = timestamp:gsub("T", " ")
+  else
+    timestamp = create_time
+  end
+
+  local lines = {}
+  table.insert(lines, string.format("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+  table.insert(lines, string.format("%s | %s", sender, timestamp))
+  table.insert(lines, "")
+  
+  -- Split text into lines
+  for line in text:gmatch("[^\r\n]+") do
+    table.insert(lines, line)
+  end
+  
+  table.insert(lines, "")
+
+  return lines
+end
+
+-- Display spaces list
+function M.show_spaces()
+  local bufnr = M.get_spaces_buffer()
+  
+  -- Create window
+  local split = config.get("ui.split")
+  if split == "vertical" then
+    vim.cmd("vsplit")
+  else
+    vim.cmd("split")
+  end
+  
+  vim.api.nvim_win_set_buf(0, bufnr)
+  
+  -- Set window size
+  local width = config.get("ui.width")
+  if split == "vertical" and width then
+    vim.api.nvim_win_set_width(0, width)
+  end
+
+  -- Show loading
+  vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Loading spaces..." })
+  vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
+
+  -- Fetch spaces
+  api.list_spaces(function(data, err)
+    if err then
+      vim.notify("Failed to load spaces: " .. err, vim.log.levels.ERROR)
+      return
+    end
+
+    M.state.spaces = data.spaces or {}
+    
+    local lines = { "Google Chat Spaces", "" }
+    
+    if #M.state.spaces == 0 then
+      table.insert(lines, "No spaces found")
+    else
+      for i, space in ipairs(M.state.spaces) do
+        table.insert(lines, string.format("%d. %s", i, format_space(space)))
+      end
+    end
+
+    vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
+
+    -- Set up keybindings
+    local opts = { noremap = true, silent = true, buffer = bufnr }
+    vim.keymap.set("n", "<CR>", function()
+      local line = vim.api.nvim_win_get_cursor(0)[1]
+      if line > 2 and line <= #M.state.spaces + 2 then
+        local space_idx = line - 2
+        local space = M.state.spaces[space_idx]
+        if space then
+          M.open_space(space.name)
+        end
+      end
+    end, opts)
+    
+    vim.keymap.set("n", "q", "<cmd>close<cr>", opts)
+    vim.keymap.set("n", "r", function()
+      M.show_spaces()
+    end, opts)
+  end)
+end
+
+-- Open a space and show messages
+function M.open_space(space_id)
+  M.state.current_space = space_id
+  local bufnr = M.get_messages_buffer(space_id)
+  
+  -- Create window
+  local split = config.get("ui.split")
+  if split == "vertical" then
+    vim.cmd("vsplit")
+  else
+    vim.cmd("split")
+  end
+  
+  vim.api.nvim_win_set_buf(0, bufnr)
+
+  -- Show loading
+  vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Loading messages..." })
+  vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
+
+  -- Fetch messages
+  api.list_messages(space_id, function(data, err)
+    if err then
+      vim.notify("Failed to load messages: " .. err, vim.log.levels.ERROR)
+      return
+    end
+
+    M.state.current_messages = data.messages or {}
+    
+    local lines = { string.format("Messages in %s", space_id), "" }
+    
+    if #M.state.current_messages == 0 then
+      table.insert(lines, "No messages found")
+    else
+      for _, message in ipairs(M.state.current_messages) do
+        local msg_lines = format_message(message)
+        for _, line in ipairs(msg_lines) do
+          table.insert(lines, line)
+        end
+      end
+    end
+
+    vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
+
+    -- Set up keybindings
+    local opts = { noremap = true, silent = true, buffer = bufnr }
+    vim.keymap.set("n", "q", "<cmd>close<cr>", opts)
+    vim.keymap.set("n", "s", function()
+      M.send_message_prompt(space_id)
+    end, opts)
+    vim.keymap.set("n", "r", function()
+      M.open_space(space_id)
+    end, opts)
+  end)
+end
+
+-- Prompt to send a message
+function M.send_message_prompt(space_id)
+  vim.ui.input({
+    prompt = "Message: ",
+  }, function(text)
+    if not text or text == "" then
+      return
+    end
+    
+    M.send_message(space_id, text)
+  end)
+end
+
+-- Send a message
+function M.send_message(space_id, text)
+  api.create_message(space_id, text, function(data, err)
+    if err then
+      vim.notify("Failed to send message: " .. err, vim.log.levels.ERROR)
+      return
+    end
+
+    vim.notify("Message sent!", vim.log.levels.INFO)
+    
+    -- Refresh messages
+    if M.state.current_space == space_id then
+      M.open_space(space_id)
+    end
+  end)
+end
+
+return M
