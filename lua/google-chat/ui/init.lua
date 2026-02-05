@@ -41,7 +41,7 @@ function M.get_messages_buffer(space_id)
   vim.api.nvim_buf_set_option(bufnr, "buftype", "nofile")
   vim.api.nvim_buf_set_option(bufnr, "bufhidden", "hide")
   vim.api.nvim_buf_set_option(bufnr, "swapfile", false)
-  vim.api.nvim_buf_set_option(bufnr, "filetype", "google-chat-messages")
+  vim.api.nvim_buf_set_option(bufnr, "filetype", "markdown")
 
   M.state.buffers[buf_key] = bufnr
   return bufnr
@@ -57,8 +57,16 @@ end
 
 -- Format message for display
 local function format_message(message)
-  local sender = message.sender and message.sender.displayName or "Unknown"
-  local text = message.text or ""
+  -- Try multiple fields for sender name
+  local sender = "Unknown"
+  if message.sender then
+    sender = message.sender.displayName 
+          or message.sender.name 
+          or (message.sender.email and message.sender.email:match("([^@]+)"))
+          or "Unknown"
+  end
+  
+  local text = message.text or message.argumentText or ""
   local create_time = message.createTime or ""
   
   -- Extract timestamp
@@ -70,11 +78,12 @@ local function format_message(message)
   end
 
   local lines = {}
-  table.insert(lines, string.format("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
-  table.insert(lines, string.format("%s | %s", sender, timestamp))
+  table.insert(lines, "")
+  table.insert(lines, string.format("**%s** • %s", sender, timestamp))
+  table.insert(lines, string.format(string.rep("─", 80)))
   table.insert(lines, "")
   
-  -- Split text into lines
+  -- Process text as markdown-like content
   for line in text:gmatch("[^\r\n]+") do
     table.insert(lines, line)
   end
@@ -199,10 +208,28 @@ function M.open_space(space_id)
 
     M.state.current_messages = data.messages or {}
     
-    local lines = { string.format("Messages in %s", space_id), "" }
+    -- Get space name for header
+    local space_name = space_id
+    for _, space in ipairs(M.state.spaces or {}) do
+      if space.name == space_id then
+        space_name = space.displayName or space.name
+        break
+      end
+    end
+    
+    local lines = { 
+      string.format("# %s", space_name),
+      "",
+      string.format("*%d messages* • Press `s` to send, `r` to refresh, `q` to close", #M.state.current_messages),
+      "",
+      string.rep("═", 80),
+      ""
+    }
     
     if #M.state.current_messages == 0 then
-      table.insert(lines, "No messages found")
+      table.insert(lines, "")
+      table.insert(lines, "*No messages found in this space*")
+      table.insert(lines, "")
     else
       for _, message in ipairs(M.state.current_messages) do
         local msg_lines = format_message(message)
