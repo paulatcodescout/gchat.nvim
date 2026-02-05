@@ -52,7 +52,9 @@ function M.batch_get_users(user_ids, callback)
       },
       callback = vim.schedule_wrap(function(response)
         if response.status ~= 200 then
-          callback(nil, "People API error: " .. response.status)
+          local error_msg = string.format("People API error: %d - %s", response.status, response.body or "")
+          vim.notify(error_msg, vim.log.levels.ERROR)
+          callback(nil, error_msg)
           return
         end
         
@@ -60,6 +62,14 @@ function M.batch_get_users(user_ids, callback)
         if not ok then
           callback(nil, "Invalid JSON response")
           return
+        end
+        
+        -- Debug: write People API response
+        local debug_file = io.open("/tmp/gchat_people_debug.json", "w")
+        if debug_file then
+          debug_file:write(vim.fn.json_encode(data))
+          debug_file:close()
+          vim.notify("People API response written to /tmp/gchat_people_debug.json", vim.log.levels.INFO)
         end
         
         -- Build user ID to display name map
