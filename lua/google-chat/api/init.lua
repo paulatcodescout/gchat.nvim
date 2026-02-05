@@ -34,7 +34,14 @@ local function request(method, endpoint, opts, callback)
             if callback then callback(nil, "Invalid JSON response") end
           end
         else
-          local error_msg = string.format("API error: %d", response.status)
+          local error_msg = string.format("API error: %d - %s", response.status, url)
+          local error_body = response.body or ""
+          if error_body ~= "" then
+            local ok, error_data = pcall(vim.fn.json_decode, error_body)
+            if ok and error_data.error then
+              error_msg = error_msg .. "\n" .. (error_data.error.message or "Unknown error")
+            end
+          end
           vim.notify(error_msg, vim.log.levels.ERROR)
           if callback then callback(nil, error_msg) end
         end
@@ -66,13 +73,20 @@ local function request(method, endpoint, opts, callback)
 end
 
 -- Get list of spaces
-function M.list_spaces(callback, page_token)
+function M.list_spaces(callback, page_token, opts)
+  opts = opts or {}
+  
   local query = {
-    pageSize = 100,
+    pageSize = opts.page_size or 100,
   }
   
   if page_token then
     query.pageToken = page_token
+  end
+  
+  -- Add filter if specified
+  if opts.filter then
+    query.filter = opts.filter
   end
 
   request("GET", "/spaces", { query = query }, callback)
