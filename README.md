@@ -91,8 +91,9 @@ Before using this plugin, you need to set up a Google Cloud project and obtain O
    - Developer contact: your email
 4. Add the following scopes:
    - `https://www.googleapis.com/auth/chat.spaces.readonly`
-   - `https://www.googleapis.com/auth/chat.messages`
+   - `https://www.googleapis.com/auth/chat.messages.readonly`
    - `https://www.googleapis.com/auth/chat.messages.create`
+   - `https://www.googleapis.com/auth/chat.memberships.readonly`
 5. Add your email as a test user (for external apps)
 
 ## Configuration

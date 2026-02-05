@@ -79,7 +79,12 @@ Restart Neovim or run `:Lazy sync`
    - User support email: your email
    - Developer contact: your email
    - Click "Save and Continue"
-   - Skip the Scopes page (click "Save and Continue")
+   - On the Scopes page, add these scopes:
+     - `https://www.googleapis.com/auth/chat.spaces.readonly`
+     - `https://www.googleapis.com/auth/chat.messages.readonly`
+     - `https://www.googleapis.com/auth/chat.messages.create`
+     - `https://www.googleapis.com/auth/chat.memberships.readonly`
+   - Click "Save and Continue"
    - Add yourself as a test user
    - Click "Save and Continue"
 4. Back to creating OAuth client ID:

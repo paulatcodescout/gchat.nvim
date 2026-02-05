@@ -9,8 +9,9 @@ M.defaults = {
     redirect_uri = "http://localhost:8080",
     scopes = {
       "https://www.googleapis.com/auth/chat.spaces.readonly",
-      "https://www.googleapis.com/auth/chat.messages",
+      "https://www.googleapis.com/auth/chat.messages.readonly",
       "https://www.googleapis.com/auth/chat.messages.create",
+      "https://www.googleapis.com/auth/chat.memberships.readonly",
     },
     token_file = vim.fn.stdpath("data") .. "/google-chat-tokens.json",
   },

@@ -66,6 +66,18 @@ function M.save_tokens()
   return true
 end
 
+-- URL encode helper
+local function url_encode(str)
+  if str then
+    str = string.gsub(str, "\n", "\r\n")
+    str = string.gsub(str, "([^%w %-%_%.%~])", function(c)
+      return string.format("%%%02X", string.byte(c))
+    end)
+    str = string.gsub(str, " ", "+")
+  end
+  return str
+end
+
 -- Generate OAuth2 authorization URL
 function M.get_auth_url()
   local client_id = config.get("auth.client_id")
@@ -83,7 +95,7 @@ function M.get_auth_url()
 
   local query = {}
   for k, v in pairs(params) do
-    table.insert(query, string.format("%s=%s", k, vim.fn.shellescape(v)))
+    table.insert(query, string.format("%s=%s", k, url_encode(v)))
   end
 
   return "https://accounts.google.com/o/oauth2/v2/auth?" .. table.concat(query, "&")
