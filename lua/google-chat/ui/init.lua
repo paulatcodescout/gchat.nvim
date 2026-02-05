@@ -56,12 +56,34 @@ local function format_space(space)
   return string.format("[%s] %s", space_type, display_name)
 end
 
+-- Generate a readable name from user ID
+local function generate_readable_name(user_id)
+  -- Extract numeric ID
+  local numeric_id = user_id:match("users/(%d+)")
+  if not numeric_id then return "Unknown User" end
+  
+  -- Create a simple hash to generate consistent names
+  local hash = 0
+  for i = 1, #numeric_id do
+    hash = (hash * 31 + string.byte(numeric_id, i)) % 1000000
+  end
+  
+  -- Use the hash to pick a color/identifier
+  local colors = {"Red", "Blue", "Green", "Purple", "Orange", "Cyan", "Yellow", "Pink"}
+  local animals = {"Fox", "Wolf", "Bear", "Eagle", "Tiger", "Lion", "Hawk", "Shark"}
+  
+  local color_idx = (hash % #colors) + 1
+  local animal_idx = (math.floor(hash / #colors) % #animals) + 1
+  
+  return colors[color_idx] .. " " .. animals[animal_idx]
+end
+
 -- Format message for display
 local function format_message(message)
   -- Try multiple fields for sender name
   local sender = "Unknown"
   if message.sender then
-    -- First check our user cache (populated from members list)
+    -- First check our user cache (populated from People API)
     if message.sender.name and M.user_cache[message.sender.name] then
       sender = M.user_cache[message.sender.name]
     -- Try displayName from message (might be populated)
@@ -70,10 +92,9 @@ local function format_message(message)
     -- If sender has email, extract username
     elseif message.sender.email and message.sender.email ~= "" then
       sender = message.sender.email:match("([^@]+)") or message.sender.email
-    -- If we only have the resource name (users/123), show a shortened version
+    -- Generate a readable pseudonym from user ID
     elseif message.sender.name then
-      local user_id = message.sender.name:match("users/(.+)")
-      sender = user_id and ("User-" .. user_id:sub(1, 8)) or "User"
+      sender = generate_readable_name(message.sender.name)
     end
   end
   
