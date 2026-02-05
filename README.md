@@ -71,6 +71,17 @@ Before using this plugin, you need to set up a Google Cloud project and obtain O
    - Navigate to "APIs & Services" > "Library"
    - Search for "Google Chat API"
    - Click "Enable"
+4. **Configure the Chat API** (REQUIRED):
+   - After enabling, click on "Google Chat API" in your enabled APIs
+   - Click the **"Configuration"** tab
+   - Fill in:
+     - **App name**: "Neovim Google Chat"
+     - **Description**: "Neovim plugin for Chat integration"
+     - **App status**: Set to "LIVE"
+     - **Enable Interactive features**: UNCHECK (not needed)
+     - **Visibility**: "Specific people and groups" - add your email
+   - Click **"Save"**
+   - **Note**: This configuration is required even for user authentication!
 
 ### 2. Create OAuth2 Credentials
 

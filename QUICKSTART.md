@@ -69,6 +69,20 @@ Restart Neovim or run `:Lazy sync`
 2. Click on it and click "Enable"
 3. Wait for the API to be enabled
 
+### 2.2.5 Configure the Chat API (CRITICAL!)
+
+1. After enabling, you'll be on the API page
+2. Click the **"Configuration"** tab at the top
+3. Fill in the form:
+   - **App name**: `Neovim Google Chat`
+   - **Description**: `Neovim plugin`
+   - **App status**: Select "LIVE"
+   - **Enable Interactive features**: Leave UNCHECKED
+   - **Visibility**: Select "Specific people and groups"
+   - Add your email address
+4. Click "Save" at the bottom
+5. **This is required** - without it you'll get "Chat app not found" errors!
+
 ### 2.3 Create OAuth Credentials
 
 1. Go to "APIs & Services" → "Credentials"
