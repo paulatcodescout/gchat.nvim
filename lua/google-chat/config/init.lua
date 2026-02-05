@@ -13,7 +13,7 @@ M.defaults = {
       "https://www.googleapis.com/auth/chat.messages.readonly",
       "https://www.googleapis.com/auth/chat.messages.create",
       "https://www.googleapis.com/auth/chat.memberships.readonly",
-      "https://www.googleapis.com/auth/contacts.readonly", -- People API to get display names
+      "https://www.googleapis.com/auth/admin.directory.user.readonly", -- Directory API for user names
     },
     token_file = vim.fn.stdpath("data") .. "/google-chat-tokens.json",
   },
