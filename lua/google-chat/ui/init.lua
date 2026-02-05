@@ -215,8 +215,13 @@ function M.open_space(space_id)
   -- First, fetch members to cache display names
   api.list_members(space_id, function(member_data, member_err)
     if not member_err and member_data and member_data.memberships then
-      -- Debug: log member data structure
-      vim.notify(string.format("Found %d members", #member_data.memberships), vim.log.levels.DEBUG)
+      -- Debug: write full member data to temp file
+      local debug_file = io.open("/tmp/gchat_debug.json", "w")
+      if debug_file then
+        debug_file:write(vim.fn.json_encode(member_data))
+        debug_file:close()
+        vim.notify("Debug data written to /tmp/gchat_debug.json", vim.log.levels.INFO)
+      end
       
       -- Cache member display names
       for _, membership in ipairs(member_data.memberships) do
@@ -224,23 +229,15 @@ function M.open_space(space_id)
           local user_id = membership.member.name
           local display_name = membership.member.displayName
           
-          -- Debug: show what we're getting
-          if user_id then
-            vim.notify(string.format("Member: %s -> %s", user_id, display_name or "NO DISPLAYNAME"), vim.log.levels.DEBUG)
-          end
-          
           if user_id and display_name then
             M.user_cache[user_id] = display_name
           end
         end
       end
       
-      -- Debug: show cache contents
-      local cache_size = 0
-      for _ in pairs(M.user_cache) do cache_size = cache_size + 1 end
-      vim.notify(string.format("User cache has %d entries", cache_size), vim.log.levels.DEBUG)
+      vim.notify(string.format("Cached %d user display names", vim.tbl_count(M.user_cache)), vim.log.levels.INFO)
     else
-      vim.notify("Failed to fetch members or no memberships found", vim.log.levels.WARN)
+      vim.notify("Failed to fetch members", vim.log.levels.WARN)
     end
     
     -- Now fetch messages
