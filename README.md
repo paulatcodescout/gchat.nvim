@@ -23,7 +23,7 @@ A Neovim plugin for Google Chat integration, allowing you to read and send messa
 
 ```lua
 {
-  "paul/gchat.nvim",
+  "paulatcodescout/gchat.nvim",
   dependencies = {
     "nvim-lua/plenary.nvim",
     "nvim-telescope/telescope.nvim", -- optional
@@ -43,7 +43,7 @@ A Neovim plugin for Google Chat integration, allowing you to read and send messa
 
 ```lua
 use {
-  "paul/gchat.nvim",
+  "paulatcodescout/gchat.nvim",
   requires = {
     "nvim-lua/plenary.nvim",
     "nvim-telescope/telescope.nvim", -- optional

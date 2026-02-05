@@ -37,7 +37,7 @@ Features:
 
 Using lazy.nvim: >lua
     {
-      "paul/gchat.nvim",
+      "paulatcodescout/gchat.nvim",
       dependencies = {
         "nvim-lua/plenary.nvim",
         "nvim-telescope/telescope.nvim",

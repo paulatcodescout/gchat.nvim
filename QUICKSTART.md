@@ -17,7 +17,7 @@ Add to your `~/.config/nvim/lua/plugins/gchat.lua`:
 
 ```lua
 return {
-  "paul/gchat.nvim",
+  "paulatcodescout/gchat.nvim",
   dependencies = {
     "nvim-lua/plenary.nvim",
     "nvim-telescope/telescope.nvim", -- optional
@@ -38,7 +38,7 @@ Or add to your main config:
 ```lua
 require("lazy").setup({
   {
-    "paul/gchat.nvim",
+    "paulatcodescout/gchat.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
       require("google-chat").setup({
