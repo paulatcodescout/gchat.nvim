@@ -222,36 +222,50 @@ end
 
 -- Start OAuth2 flow
 function M.authenticate()
-  local auth_url = M.get_auth_url()
+  local server = require("google-chat.auth.server")
+  local port = config.get("auth.loopback_port")
   
-  vim.notify("Opening browser for authentication...", vim.log.levels.INFO)
-  vim.notify("URL: " .. auth_url, vim.log.levels.INFO)
+  vim.notify("Starting OAuth server on port " .. port .. "...", vim.log.levels.INFO)
   
-  -- Open browser
-  local open_cmd = "xdg-open"
-  if vim.fn.has("mac") == 1 then
-    open_cmd = "open"
-  elseif vim.fn.has("win32") == 1 then
-    open_cmd = "start"
-  end
-  
-  vim.fn.system(string.format("%s '%s'", open_cmd, auth_url))
-  
-  -- Prompt for authorization code
-  vim.ui.input({
-    prompt = "Enter authorization code: ",
-  }, function(code)
-    if not code or code == "" then
-      vim.notify("Authentication cancelled", vim.log.levels.WARN)
+  -- Start temporary HTTP server to catch redirect
+  local oauth_server = server.start_oauth_server(port, function(code)
+    if not code then
+      vim.notify("Authentication failed or cancelled", vim.log.levels.ERROR)
       return
     end
+    
+    vim.notify("Received authorization code, exchanging for tokens...", vim.log.levels.INFO)
     
     M.exchange_code(code, function(success)
       if success then
         vim.notify("Authentication successful!", vim.log.levels.INFO)
+      else
+        vim.notify("Failed to exchange authorization code", vim.log.levels.ERROR)
       end
     end)
   end)
+  
+  if not oauth_server then
+    vim.notify("Failed to start OAuth server", vim.log.levels.ERROR)
+    return
+  end
+  
+  -- Give the server a moment to start
+  vim.defer_fn(function()
+    local auth_url = M.get_auth_url()
+    
+    vim.notify("Opening browser for authentication...", vim.log.levels.INFO)
+    
+    -- Open browser
+    local open_cmd = "xdg-open"
+    if vim.fn.has("mac") == 1 then
+      open_cmd = "open"
+    elseif vim.fn.has("win32") == 1 then
+      open_cmd = "start"
+    end
+    
+    vim.fn.system(string.format("%s '%s'", open_cmd, auth_url))
+  end, 100)
 end
 
 -- Initialize (load existing tokens)

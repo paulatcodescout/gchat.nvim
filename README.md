@@ -81,7 +81,7 @@ Before using this plugin, you need to set up a Google Cloud project and obtain O
 5. Click "Create"
 6. Copy the **Client ID** and **Client Secret**
 
-**Note**: Desktop apps use the "out-of-band" (OOB) OAuth flow, which displays the authorization code directly in the browser for you to copy.
+**Note**: The plugin uses the loopback flow (http://127.0.0.1:8080) which starts a temporary local server to catch the OAuth redirect. This is the recommended method for desktop applications.
 
 ### 3. Configure OAuth Consent Screen
 
@@ -106,7 +106,8 @@ require("google-chat").setup({
   auth = {
     client_id = "YOUR_CLIENT_ID",
     client_secret = "YOUR_CLIENT_SECRET",
-    redirect_uri = "urn:ietf:wg:oauth:2.0:oob", -- default (OOB flow for desktop)
+    redirect_uri = "http://127.0.0.1:8080", -- default (loopback for desktop)
+    loopback_port = 8080, -- port for OAuth server
     token_file = vim.fn.stdpath("data") .. "/google-chat-tokens.json", -- default
   },
 
@@ -143,14 +144,14 @@ First, authenticate with Google:
 ```
 
 This will:
-1. Open your browser with the Google OAuth consent page
-2. Sign in and authorize the app
-3. Google will display an authorization code on the page
-4. Copy the code from the browser
-5. Paste it into Neovim when prompted
+1. Start a temporary local HTTP server on port 8080
+2. Open your browser with the Google OAuth consent page
+3. Sign in and authorize the app
+4. Google redirects back to the local server automatically
+5. The authorization code is captured automatically
 6. Your tokens will be securely stored for future sessions
 
-**Note**: The browser will show a page saying "Sign in to continue to Neovim Google Chat" and then display a code. This is the out-of-band (OOB) flow for desktop applications.
+**Note**: The plugin uses the OAuth loopback flow. After you click "Allow" in the browser, you should see a success page and can close the browser tab. No manual code copying needed!
 
 Check authentication status:
 

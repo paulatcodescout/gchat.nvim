@@ -6,7 +6,8 @@ M.defaults = {
   auth = {
     client_id = "",
     client_secret = "",
-    redirect_uri = "urn:ietf:wg:oauth:2.0:oob", -- Out-of-band flow for desktop apps
+    redirect_uri = "http://127.0.0.1:8080", -- Loopback address for OAuth
+    loopback_port = 8080, -- Port for temporary OAuth server
     scopes = {
       "https://www.googleapis.com/auth/chat.spaces.readonly",
       "https://www.googleapis.com/auth/chat.messages.readonly",

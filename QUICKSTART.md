@@ -115,16 +115,16 @@ Reload your shell or run `source ~/.bashrc` (or equivalent).
 
 1. Open Neovim
 2. Run: `:GoogleChatAuth`
-3. Your browser will open with Google's consent screen
-4. Sign in and click "Allow"
-5. Google will display an authorization code on the page (not redirect)
-6. **Copy the entire authorization code** from the browser
-7. Go back to Neovim and paste the code when prompted
-8. Press Enter
+3. The plugin starts a temporary local server on port 8080
+4. Your browser opens with Google's consent screen
+5. Sign in and click "Allow"
+6. Google redirects back to localhost automatically
+7. You'll see "Authentication Successful!" in the browser
+8. Close the browser tab and return to Neovim
 
 You should see: "Successfully authenticated with Google Chat!"
 
-**Important**: The browser shows a page with the code because this is a "Desktop app" OAuth flow. You won't be redirected - just copy the code shown.
+**That's it!** The OAuth loopback flow handles everything automatically - no need to copy/paste codes.
 
 ## Step 4: Start Using It (1 minute)
 
