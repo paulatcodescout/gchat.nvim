@@ -92,9 +92,20 @@ function M.list_spaces(callback, page_token, opts)
   request("GET", "/spaces", { query = query }, callback)
 end
 
+-- Normalize space/message ID (remove leading slash if present, ensure no double spaces/)
+local function normalize_resource_name(resource_name)
+  if not resource_name then return "" end
+  -- Remove leading slash
+  resource_name = resource_name:gsub("^/", "")
+  -- If it already starts with "spaces/", don't add prefix
+  -- Otherwise, it's just the ID, so we don't add anything (API expects full path)
+  return resource_name
+end
+
 -- Get space details
 function M.get_space(space_id, callback)
-  request("GET", "/spaces/" .. space_id, {}, callback)
+  local path = "/" .. normalize_resource_name(space_id)
+  request("GET", path, {}, callback)
 end
 
 -- List messages in a space
@@ -113,13 +124,14 @@ function M.list_messages(space_id, callback, opts)
     query.filter = opts.filter
   end
 
-  request("GET", "/spaces/" .. space_id .. "/messages", { query = query }, callback)
+  local path = "/" .. normalize_resource_name(space_id) .. "/messages"
+  request("GET", path, { query = query }, callback)
 end
 
 -- Get a specific message
 function M.get_message(space_id, message_id, callback)
-  local endpoint = string.format("/spaces/%s/messages/%s", space_id, message_id)
-  request("GET", endpoint, {}, callback)
+  local path = "/" .. normalize_resource_name(space_id) .. "/messages/" .. message_id
+  request("GET", path, {}, callback)
 end
 
 -- Create a message
@@ -140,12 +152,13 @@ function M.create_message(space_id, text, callback, opts)
     body.messageReplyOption = opts.message_reply_option
   end
 
-  request("POST", "/spaces/" .. space_id .. "/messages", { body = body }, callback)
+  local path = "/" .. normalize_resource_name(space_id) .. "/messages"
+  request("POST", path, { body = body }, callback)
 end
 
 -- Update a message
 function M.update_message(space_id, message_id, text, callback)
-  local endpoint = string.format("/spaces/%s/messages/%s", space_id, message_id)
+  local path = "/" .. normalize_resource_name(space_id) .. "/messages/" .. message_id
   local body = {
     text = text,
   }
@@ -154,13 +167,13 @@ function M.update_message(space_id, message_id, text, callback)
     updateMask = "text",
   }
 
-  request("PUT", endpoint, { body = body, query = query }, callback)
+  request("PUT", path, { body = body, query = query }, callback)
 end
 
 -- Delete a message
 function M.delete_message(space_id, message_id, callback)
-  local endpoint = string.format("/spaces/%s/messages/%s", space_id, message_id)
-  request("DELETE", endpoint, {}, callback)
+  local path = "/" .. normalize_resource_name(space_id) .. "/messages/" .. message_id
+  request("DELETE", path, {}, callback)
 end
 
 -- Get members of a space
@@ -169,25 +182,26 @@ function M.list_members(space_id, callback)
     pageSize = 100,
   }
 
-  request("GET", "/spaces/" .. space_id .. "/members", { query = query }, callback)
+  local path = "/" .. normalize_resource_name(space_id) .. "/members"
+  request("GET", path, { query = query }, callback)
 end
 
 -- Create a reaction
 function M.create_reaction(space_id, message_id, emoji, callback)
-  local endpoint = string.format("/spaces/%s/messages/%s/reactions", space_id, message_id)
+  local path = "/" .. normalize_resource_name(space_id) .. "/messages/" .. message_id .. "/reactions"
   local body = {
     emoji = {
       unicode = emoji,
     },
   }
 
-  request("POST", endpoint, { body = body }, callback)
+  request("POST", path, { body = body }, callback)
 end
 
 -- List reactions
 function M.list_reactions(space_id, message_id, callback)
-  local endpoint = string.format("/spaces/%s/messages/%s/reactions", space_id, message_id)
-  request("GET", endpoint, {}, callback)
+  local path = "/" .. normalize_resource_name(space_id) .. "/messages/" .. message_id .. "/reactions"
+  request("GET", path, {}, callback)
 end
 
 -- Search spaces (client-side filtering for MVP)
