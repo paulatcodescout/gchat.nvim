@@ -98,6 +98,7 @@ Restart Neovim or run `:Lazy sync`
      - `https://www.googleapis.com/auth/chat.messages.readonly`
      - `https://www.googleapis.com/auth/chat.messages.create`
      - `https://www.googleapis.com/auth/chat.memberships.readonly`
+     - `https://www.googleapis.com/auth/userinfo.profile`
    - Click "Save and Continue"
    - Add yourself as a test user
    - Click "Save and Continue"

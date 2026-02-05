@@ -60,10 +60,20 @@ local function format_message(message)
   -- Try multiple fields for sender name
   local sender = "Unknown"
   if message.sender then
-    sender = message.sender.displayName 
-          or message.sender.name 
-          or (message.sender.email and message.sender.email:match("([^@]+)"))
-          or "Unknown"
+    -- First check our user cache (populated from members list)
+    if message.sender.name and M.user_cache[message.sender.name] then
+      sender = M.user_cache[message.sender.name]
+    -- Try displayName from message (might be populated)
+    elseif message.sender.displayName and message.sender.displayName ~= "" then
+      sender = message.sender.displayName
+    -- If sender has email, extract username
+    elseif message.sender.email and message.sender.email ~= "" then
+      sender = message.sender.email:match("([^@]+)") or message.sender.email
+    -- If we only have the resource name (users/123), show a shortened version
+    elseif message.sender.name then
+      local user_id = message.sender.name:match("users/(.+)")
+      sender = user_id and ("User-" .. user_id:sub(1, 8)) or "User"
+    end
   end
   
   local text = message.text or message.argumentText or ""
@@ -177,6 +187,9 @@ function M.show_spaces()
   end)
 end
 
+-- Cache for user display names
+M.user_cache = {}
+
 -- Open a space and show messages
 function M.open_space(space_id)
   M.state.current_space = space_id
@@ -199,8 +212,23 @@ function M.open_space(space_id)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Loading messages..." })
   vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
 
-  -- Fetch messages
-  api.list_messages(space_id, function(data, err)
+  -- First, fetch members to cache display names
+  api.list_members(space_id, function(member_data, member_err)
+    if not member_err and member_data and member_data.memberships then
+      -- Cache member display names
+      for _, membership in ipairs(member_data.memberships) do
+        if membership.member then
+          local user_id = membership.member.name
+          local display_name = membership.member.displayName
+          if user_id and display_name then
+            M.user_cache[user_id] = display_name
+          end
+        end
+      end
+    end
+    
+    -- Now fetch messages
+    api.list_messages(space_id, function(data, err)
     if err then
       vim.notify("Failed to load messages: " .. err, vim.log.levels.ERROR)
       return

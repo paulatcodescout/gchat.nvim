@@ -107,6 +107,7 @@ Before using this plugin, you need to set up a Google Cloud project and obtain O
    - `https://www.googleapis.com/auth/chat.messages.readonly`
    - `https://www.googleapis.com/auth/chat.messages.create`
    - `https://www.googleapis.com/auth/chat.memberships.readonly`
+   - `https://www.googleapis.com/auth/userinfo.profile` (for user display names)
 5. Add your email as a test user (for external apps)
 
 ## Configuration
