@@ -114,6 +114,7 @@ function M.list_messages(space_id, callback, opts)
   
   local query = {
     pageSize = opts.page_size or 50,
+    orderBy = "createTime desc", -- Most recent first
   }
   
   if opts.page_token then

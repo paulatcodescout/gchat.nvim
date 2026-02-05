@@ -29,9 +29,10 @@ M.defaults = {
 
   -- UI settings
   ui = {
-    split = "vertical",
-    width = 80,
-    height = 30,
+    float = true, -- Use floating windows (recommended)
+    split = "vertical", -- If float=false, split direction
+    width = 80, -- Width for splits (unused with float=true)
+    height = 30, -- Height for splits (unused with float=true)
     date_format = "%Y-%m-%d %H:%M",
     show_avatars = false,
   },

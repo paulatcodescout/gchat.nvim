@@ -84,25 +84,41 @@ local function format_message(message)
   return lines
 end
 
+-- Create centered floating window
+local function create_float_win(bufnr, title)
+  local width = math.floor(vim.o.columns * 0.8)
+  local height = math.floor(vim.o.lines * 0.8)
+  
+  local col = math.floor((vim.o.columns - width) / 2)
+  local row = math.floor((vim.o.lines - height) / 2)
+  
+  local opts = {
+    relative = "editor",
+    width = width,
+    height = height,
+    col = col,
+    row = row,
+    style = "minimal",
+    border = "rounded",
+    title = title or "Google Chat",
+    title_pos = "center",
+  }
+  
+  local win = vim.api.nvim_open_win(bufnr, true, opts)
+  
+  -- Set window options
+  vim.api.nvim_win_set_option(win, "wrap", true)
+  vim.api.nvim_win_set_option(win, "linebreak", true)
+  
+  return win
+end
+
 -- Display spaces list
 function M.show_spaces()
   local bufnr = M.get_spaces_buffer()
   
-  -- Create window
-  local split = config.get("ui.split")
-  if split == "vertical" then
-    vim.cmd("vsplit")
-  else
-    vim.cmd("split")
-  end
-  
-  vim.api.nvim_win_set_buf(0, bufnr)
-  
-  -- Set window size
-  local width = config.get("ui.width")
-  if split == "vertical" and width then
-    vim.api.nvim_win_set_width(0, width)
-  end
+  -- Create floating window
+  local win = create_float_win(bufnr, "Google Chat Spaces")
 
   -- Show loading
   vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
@@ -157,15 +173,17 @@ function M.open_space(space_id)
   M.state.current_space = space_id
   local bufnr = M.get_messages_buffer(space_id)
   
-  -- Create window
-  local split = config.get("ui.split")
-  if split == "vertical" then
-    vim.cmd("vsplit")
-  else
-    vim.cmd("split")
+  -- Get space name for title
+  local space_title = "Messages"
+  for _, space in ipairs(M.state.spaces or {}) do
+    if space.name == space_id then
+      space_title = space.displayName or space.name or "Messages"
+      break
+    end
   end
   
-  vim.api.nvim_win_set_buf(0, bufnr)
+  -- Create floating window
+  local win = create_float_win(bufnr, space_title)
 
   -- Show loading
   vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
