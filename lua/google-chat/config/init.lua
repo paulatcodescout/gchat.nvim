@@ -6,7 +6,7 @@ M.defaults = {
   auth = {
     client_id = "",
     client_secret = "",
-    redirect_uri = "http://localhost:8080",
+    redirect_uri = "urn:ietf:wg:oauth:2.0:oob", -- Out-of-band flow for desktop apps
     scopes = {
       "https://www.googleapis.com/auth/chat.spaces.readonly",
       "https://www.googleapis.com/auth/chat.messages.readonly",

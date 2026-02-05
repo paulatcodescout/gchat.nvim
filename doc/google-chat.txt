@@ -61,7 +61,7 @@ Configure the plugin using the setup function: >lua
       auth = {
         client_id = "YOUR_CLIENT_ID",
         client_secret = "YOUR_CLIENT_SECRET",
-        redirect_uri = "http://localhost:8080",
+        redirect_uri = "urn:ietf:wg:oauth:2.0:oob",
       },
       ui = {
         split = "vertical",

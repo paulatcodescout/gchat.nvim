@@ -110,8 +110,63 @@ Users must now add the correct scopes to their OAuth consent screen in Google Cl
 
 ---
 
+## Fix 3: Invalid Redirect URI (Localhost Not Working)
+
+### Issue
+
+The initial configuration used `http://localhost:8080` as the redirect URI. When users authenticated, Google would redirect to localhost, but there was no server running to catch the redirect, resulting in a "This site can't be reached" error in the browser.
+
+### Problem Configuration
+```lua
+redirect_uri = "http://localhost:8080"
+```
+
+### Fix Applied
+
+Changed to use the **out-of-band (OOB)** OAuth flow, which is the standard approach for desktop applications:
+
+```lua
+redirect_uri = "urn:ietf:wg:oauth:2.0:oob"
+```
+
+### How OOB Flow Works
+
+1. User clicks authorize in the browser
+2. Instead of redirecting, Google displays the authorization code directly on a page
+3. User copies the code from the browser
+4. User pastes it into Neovim when prompted
+5. Plugin exchanges the code for tokens
+
+This is the recommended approach for desktop/CLI applications that can't run a web server.
+
+### User Experience
+
+After clicking "Allow" in the browser, users will see a page that says:
+- "Sign in to continue to Neovim Google Chat"
+- A text box with the authorization code
+- A "Copy" button to copy the code
+
+Simply copy the code and paste it into Neovim.
+
+### Alternative Approaches Not Used
+
+We didn't implement:
+- **Local HTTP server** - Would require additional dependencies and complexity
+- **Loopback flow** - Requires running a server on a specific port
+- **Device flow** - More steps and polling required
+
+The OOB flow is simpler and more reliable for a Neovim plugin.
+
+### Files Modified
+- `lua/google-chat/config/init.lua`
+- `README.md`
+- `QUICKSTART.md`
+- `doc/google-chat.txt`
+
+---
+
 **Fixed**: February 5, 2026
 **Files Modified**: 
 - `lua/google-chat/auth/init.lua` (URL encoding)
-- `lua/google-chat/config/init.lua` (OAuth scopes)
+- `lua/google-chat/config/init.lua` (OAuth scopes, redirect URI)
 - Documentation files
