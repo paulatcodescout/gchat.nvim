@@ -280,7 +280,8 @@ function M.open_space(space_id)
     vim.keymap.set("n", "r", function()
       M.open_space(space_id)
     end, opts)
-  end)
+  end) -- End of list_messages callback
+  end) -- End of list_members callback
 end
 
 -- Prompt to send a message
